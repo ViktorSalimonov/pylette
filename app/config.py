@@ -3,7 +3,7 @@ import os
 class Config():
     DEBUG = False
     TESTING = False
-    UPLOAD_FOLDER = '/home/salv/Project/qkr/data'
+    UPLOAD_FOLDER = '/home/salv/Projects/qkr/data'
     ALLOWED_EXTENSIONS = set(['jpg', 'jpeg', 'png'])
 
 
