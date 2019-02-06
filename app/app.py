@@ -1,12 +1,25 @@
 import os
 
 from flask import Flask, redirect, render_template, request
+from flask_celery import make_celery
+from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 
 import config
 
+
 app = Flask(__name__)
 app.config.from_object(config.DevelopmentConfig)
+
+db = SQLAlchemy(app)
+celery = make_celery(app)
+
+class Task(db.Model):
+    pass
+
+
+
+
 
 @app.route('/')
 def index():
