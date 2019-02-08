@@ -10,7 +10,11 @@ class DevelopmentConfig(Config):
     DEBUG = True
     TESTING = True
     UPLOAD_FOLDER = '/home/salv/Projects/qkr/data'
-    CELERY_BROKER_URL = 'ampq://localhost//'
-    SQLALCHEMY_DATABASE_URI = #to-do
-
-
+    POSTGRES = {
+    'user': 'postgres',
+    'pw': '',
+    'db': 'qkr',
+    'host': 'localhost',
+    'port': '5432',
+    }
+    
