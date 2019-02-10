@@ -31,29 +31,33 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/processing')
-def processing():
-    # to-do
-    return None
+@app.route('/process/<filename>')
+def processing(filename):
+    image = Image.open(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    new_image = image.resize((400, 400))
+    new_image_filename = '_' + filename
+    new_image_filepath = os.path.join(app.config['UPLOAD_FOLDER'], new_image_filename)
+    new_image.save(new_image_filepath)
+    return render_template('result.html', image_name=new_image_filename)
 
 
 @app.route('/result/<filename>')
 def send_image(filename):
-     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
 @app.route('/upload', methods=['POST'])
 def upload():
     if request.method == 'POST':
         file = request.files['file']
-        upload_folder = app.config['UPLOAD_FOLDER']
         file_path = os.path.join(
-            upload_folder, secure_filename(file.filename))
+            app.config['UPLOAD_FOLDER'], secure_filename(file.filename))
         filename, file_extention = os.path.splitext(file_path)
         uuid_filename = str(uuid.uuid4()) + file_extention
-        uuid_file_path = os.path.join(upload_folder, uuid_filename)
+        uuid_file_path = os.path.join(
+            app.config['UPLOAD_FOLDER'], uuid_filename)
         file.save(uuid_file_path)
-        return render_template('result.html', image_name=uuid_filename)
+        return redirect('/process/' + uuid_filename)
 
 
 if __name__ == '__main__':
