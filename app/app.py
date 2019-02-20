@@ -7,7 +7,6 @@ import cv2
 from celery.result import AsyncResult
 from flask import Flask, redirect, render_template, request, send_from_directory
 from flask_celery import make_celery
-from flask_sqlalchemy import SQLAlchemy
 from matplotlib import pyplot as plt
 from PIL import Image
 from sklearn.cluster import KMeans
@@ -18,8 +17,6 @@ import config
 
 app = Flask(__name__)
 app.config.from_object(config.DevelopmentConfig)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://%(user)s:\
-%(pw)s@%(host)s:%(port)s/%(db)s' % app.config['POSTGRES']
 
 
 celery = make_celery(app)
