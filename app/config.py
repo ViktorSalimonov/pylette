@@ -9,7 +9,8 @@ class Config():
 class DevelopmentConfig(Config):
     DEBUG = True
     TESTING = True
-    UPLOAD_FOLDER = '/home/salv/Projects/qkr/data'
+    UPLOAD_FOLDER = '/home/salv/Projects/qkr/uploads'
+    RESULT_FOLDER = '/home/salv/Projects/qkr/results'
     CELERY_BROKER_URL='redis://localhost:6379',
     CELERY_RESULT_BACKEND='redis://localhost:6379'
     POSTGRES = {
