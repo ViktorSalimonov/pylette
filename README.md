@@ -1,2 +1,2 @@
 # PyLette
-The websrvice for extracting dominant color from an image.
+The web-service for extracting dominant color from images.
