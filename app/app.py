@@ -1,11 +1,12 @@
 from collections import Counter
+import logging
 import re
 import os
 import uuid
 
 import cv2
 from celery.result import AsyncResult
-from flask import Flask, redirect, render_template, request, send_from_directory
+from flask import Flask, redirect, render_template, request, send_from_directory, url_for
 from flask_celery import make_celery
 from matplotlib import pyplot as plt
 from PIL import Image
@@ -15,9 +16,22 @@ from werkzeug.utils import secure_filename
 import config
 
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s')
+file_handler = logging.FileHandler('app/app.log')
+file_handler.setFormatter(formatter)
+
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(formatter)
+
+logger.addHandler(file_handler)
+logger.addHandler(stream_handler)
+
+
 app = Flask(__name__)
 app.config.from_object(config.DevelopmentConfig)
-
 
 celery = make_celery(app)
 
@@ -27,16 +41,32 @@ def index():
     return render_template('index.html')
 
 
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
 @app.route('/upload', methods=['POST'])
 def upload():
     if request.method == 'POST':
+        if not request.files.get('file', None):
+            msg = 'the request contains no file'
+            logger.error(msg)
+            return render_template('exception.html', text=msg)
+        
         file = request.files['file']
+        if file and not allowed_file(file.filename):
+            msg = f'the file {file.filename} has wrong extention'
+            logger.error(msg)
+            return render_template('exception.html', text=msg)
+        
         path = os.path.join(
             app.config['UPLOAD_FOLDER'], secure_filename(file.filename))
         filename, file_extention = os.path.splitext(path)
         filename_uuid = str(uuid.uuid4()) + file_extention
         path_uuid = os.path.join(app.config['UPLOAD_FOLDER'], filename_uuid)
+        
         file.save(path_uuid)
+        logger.info(f'the file {file.filename} has been successfully saved as {filename_uuid}')
         return redirect('/process/' + filename_uuid)
 
 
@@ -45,6 +75,7 @@ def task_processing(filename):
     task = processing.delay(filename)
     async_result = AsyncResult(id=task.task_id, app=celery)
     processing_result = async_result.get()
+    logger.info('Processing')
     return render_template('result.html', image_name=processing_result)
 
 
