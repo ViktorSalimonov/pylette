@@ -6,6 +6,7 @@ import uuid
 
 import cv2
 from celery.result import AsyncResult
+from celery.utils.log import get_task_logger
 from flask import Flask, redirect, render_template, request, send_from_directory, url_for
 from flask_celery import make_celery
 from matplotlib import pyplot as plt
@@ -17,10 +18,13 @@ import config
 
 
 logger = logging.getLogger(__name__)
+celery_logger = get_task_logger(__name__)
+
 logger.setLevel(logging.DEBUG)
+celery_logger.setLevel(logging.DEBUG)
 
 formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s')
-file_handler = logging.FileHandler('app/app.log')
+file_handler = logging.FileHandler('/home/salv/Projects/qkr/app/app.log')
 file_handler.setFormatter(formatter)
 
 stream_handler = logging.StreamHandler()
@@ -28,6 +32,8 @@ stream_handler.setFormatter(formatter)
 
 logger.addHandler(file_handler)
 logger.addHandler(stream_handler)
+celery_logger.addHandler(file_handler)
+celery_logger.addHandler(stream_handler)
 
 
 app = Flask(__name__)
@@ -75,7 +81,6 @@ def task_processing(filename):
     task = processing.delay(filename)
     async_result = AsyncResult(id=task.task_id, app=celery)
     processing_result = async_result.get()
-    logger.info('Processing')
     return render_template('result.html', image_name=processing_result)
 
 
@@ -91,6 +96,7 @@ def rgb2hex(rgb):
 
 @celery.task(name='qkr.processing')
 def processing(filename):
+    celery_logger.info(f'working on the {filename} processing')
     k = 6
     path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     
