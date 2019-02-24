@@ -17,29 +17,30 @@ from werkzeug.utils import secure_filename
 import config
 
 
+app = Flask(__name__)
+app.config.from_object(config.DevelopmentConfig)
+
+celery = make_celery(app)
+
+
 logger = logging.getLogger(__name__)
 celery_logger = get_task_logger(__name__)
 
-logger.setLevel(logging.DEBUG)
-celery_logger.setLevel(logging.DEBUG)
-
 formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s')
-file_handler = logging.FileHandler('/home/salv/Projects/qkr/app/app.log')
+file_handler = logging.FileHandler(app.config['LOGFILE'])
 file_handler.setFormatter(formatter)
 
 stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(formatter)
 
-logger.addHandler(file_handler)
-logger.addHandler(stream_handler)
-celery_logger.addHandler(file_handler)
-celery_logger.addHandler(stream_handler)
+def set_logger(logger):
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(file_handler)
+    logger.addHandler(stream_handler)
+    return logger
 
-
-app = Flask(__name__)
-app.config.from_object(config.DevelopmentConfig)
-
-celery = make_celery(app)
+logger = set_logger(logger)
+celery_logger = set_logger(celery_logger)
 
 
 @app.route('/')
@@ -96,8 +97,8 @@ def rgb2hex(rgb):
 
 @celery.task(name='qkr.processing')
 def processing(filename):
-    celery_logger.info(f'working on the {filename} processing')
     k = 6
+    celery_logger.info(f'{filename} is processing : k={k}')
     path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     
     img_bgr = cv2.imread(path)
@@ -128,6 +129,7 @@ def processing(filename):
 
     file_path = os.path.join(app.config['RESULT_FOLDER'], filename)
     plt.savefig(file_path)
+    celery_logger.info(f'processing {filename} is completed : {color_labels}')
     return filename
 
 

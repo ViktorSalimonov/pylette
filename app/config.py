@@ -4,7 +4,7 @@ class Config():
     DEBUG = False
     TESTING = False
     ALLOWED_EXTENSIONS = set(['jpg', 'jpeg', 'png'])
-    
+    LOGFILE = '/home/salv/Projects/qkr/app/app.log'
 
 class DevelopmentConfig(Config):
     DEBUG = True
