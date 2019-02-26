@@ -13,12 +13,15 @@ from matplotlib import pyplot as plt
 from PIL import Image
 from sklearn.cluster import KMeans
 from werkzeug.utils import secure_filename
+import yaml
 
-import config
+
+config_path = os.path.abspath(os.path.join(os.getcwd(), os.pardir, 'config.yml'))
+config = yaml.load(open(config_path))
 
 
 app = Flask(__name__)
-app.config.from_object(config.DevelopmentConfig)
+app.config.update(config)
 
 celery = make_celery(app)
 
@@ -66,11 +69,13 @@ def upload():
             logger.error(msg)
             return render_template('exception.html', text=msg)
         
-        path = os.path.join(
-            app.config['UPLOAD_FOLDER'], secure_filename(file.filename))
+        path = os.path.abspath(os.path.join(
+            os.getcwd(), os.pardir, app.config['UPLOAD_FOLDER'], secure_filename(file.filename)))
         filename, file_extention = os.path.splitext(path)
+
         filename_uuid = str(uuid.uuid4()) + file_extention
-        path_uuid = os.path.join(app.config['UPLOAD_FOLDER'], filename_uuid)
+        path_uuid = os.path.abspath(os.path.join(
+            os.getcwd(), os.pardir, app.config['UPLOAD_FOLDER'], filename_uuid))
         
         file.save(path_uuid)
         logger.info(f'the file {file.filename} has been successfully saved as {filename_uuid}')
@@ -87,7 +92,8 @@ def task_processing(filename):
 
 @app.route('/result/<filename>')
 def send_image(filename):
-    return send_from_directory(app.config['RESULT_FOLDER'], filename)
+    return send_from_directory(os.path.abspath(os.path.join(
+            os.getcwd(), os.pardir, app.config['RESULT_FOLDER'])), filename)
 
 
 def rgb2hex(rgb):
@@ -99,7 +105,8 @@ def rgb2hex(rgb):
 def processing(filename):
     k = 6
     celery_logger.info(f'{filename} is processing : k={k}')
-    path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    path = os.path.abspath(os.path.join(
+            os.getcwd(), os.pardir, app.config['UPLOAD_FOLDER'], filename))
     
     img_bgr = cv2.imread(path)
     img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
@@ -127,7 +134,8 @@ def processing(filename):
     plt.pie(label_counts.values(), labels=color_labels, colors=ordered_colors, startangle=90)
     plt.axis('equal')
 
-    file_path = os.path.join(app.config['RESULT_FOLDER'], filename)
+    file_path = os.path.abspath(os.path.join(
+            os.getcwd(), os.pardir, app.config['RESULT_FOLDER'], filename))
     plt.savefig(file_path)
     celery_logger.info(f'processing {filename} is completed : {color_labels}')
     return filename
