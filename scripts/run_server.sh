@@ -1,4 +1,4 @@
 #!/bin/bash
 
-cd app
+cd app || exit
 su -m app -c "python app.py"

@@ -1,30 +1,25 @@
-from collections import Counter
+import cv2
 import logging
-import re
 import os
 import uuid
-
-import cv2
-from celery.result import AsyncResult
-from celery.utils.log import get_task_logger
-from flask import Flask, redirect, render_template, request, send_from_directory, url_for
-from flask_celery import make_celery
+import yaml
+from collections import Counter
 from matplotlib import pyplot as plt
-from PIL import Image
 from sklearn.cluster import KMeans
 from werkzeug.utils import secure_filename
-import yaml
 
+from celery.result import AsyncResult
+from celery.utils.log import get_task_logger
+from flask import Flask, redirect, render_template, request, send_from_directory
+from flask_celery import make_celery
 
 config_path = os.path.abspath(os.path.join(os.getcwd(), os.pardir, 'config.yml'))
 config = yaml.load(open(config_path))
-
 
 app = Flask(__name__)
 app.config.update(config)
 
 celery = make_celery(app)
-
 
 logger = logging.getLogger(__name__)
 celery_logger = get_task_logger(__name__)
@@ -101,7 +96,7 @@ def rgb2hex(rgb):
     return hex
 
 
-@celery.task(name='qkr.processing')
+@celery.task(name='celery.processing')
 def processing(filename):
     k = 6
     celery_logger.info(f'{filename} is processing : k={k}')
@@ -119,7 +114,6 @@ def processing(filename):
     labels = clt.fit_predict(img_list)
         
     label_counts = Counter(labels)
-    total_count = sum(label_counts.values())
 
     center_colors = list(clt.cluster_centers_)
     ordered_colors = [center_colors[i]/255 for i in label_counts.keys()]
@@ -141,5 +135,5 @@ def processing(filename):
     return filename
 
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0')
+if __name__ == "__main__":
+    app.run(host="0.0.0.0")
