@@ -17,7 +17,7 @@ pyaml==18.11.0
 pyparsing==2.3.1
 python-dateutil==2.8.0
 pytz==2018.9
-PyYAML==5.1
+PyYAML==5.4
 redis==3.2.0
 scikit-learn==0.20.2
 scipy==1.2.1
