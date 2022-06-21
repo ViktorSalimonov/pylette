@@ -10,7 +10,7 @@ kiwisolver==1.0.1
 kombu==4.3.0
 MarkupSafe==1.1.0
 matplotlib==3.0.2
-numpy==1.16.1
+numpy==1.22.0
 opencv-python==4.0.0.21
 Pillow==6.2.0
 pyaml==18.11.0
